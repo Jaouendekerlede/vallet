@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#0f1220">
+  <meta name="description" content="Archive personnelle de cartes de fidélité, d'adhésion, cadeaux et badges, avec code-barres plein écran.">
+  <title>Vallet</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="v-app">
+    <header class="v-entete">
+      <h1>Vallet</h1>
+      <input type="search" id="v-recherche" placeholder="Rechercher une carte…" aria-label="Rechercher une carte">
+      <select id="v-tri" aria-label="Trier">
+        <option value="favoris">★ Favoris d'abord</option>
+        <option value="recentes">Récemment utilisées</option>
+        <option value="nom">Nom (A → Z)</option>
+        <option value="ajout">Dernières ajoutées</option>
+      </select>
+      <button type="button" class="v-icone-btn" id="v-reglages-btn" title="Réglages" aria-label="Réglages">⚙️</button>
+    </header>
+
+    <nav class="v-filtres" id="v-filtres" aria-label="Catégories"></nav>
+
+    <main id="v-grille" class="v-grille"></main>
+
+    <button type="button" class="v-ajout" id="v-ajout-btn" title="Ajouter une carte" aria-label="Ajouter une carte">＋</button>
+  </div>
+
+  <!-- Plein écran pour le passage en caisse -->
+  <div id="v-plein" class="v-plein" hidden>
+    <button type="button" class="v-plein-fermer" id="v-plein-fermer" aria-label="Fermer">✕</button>
+    <div class="v-plein-nom" id="v-plein-nom"></div>
+    <div class="v-plein-corps" id="v-plein-corps"></div>
+    <div class="v-plein-valeur" id="v-plein-valeur"></div>
+    <div class="v-plein-actions">
+      <button type="button" id="v-plein-favori">☆ Favori</button>
+      <button type="button" id="v-plein-modifier">✏️ Modifier</button>
+    </div>
+  </div>
+
+  <!-- Ajout / modification -->
+  <dialog id="v-form" class="v-dialog">
+    <form method="dialog" id="v-form-corps">
+      <h2 id="v-form-titre">Nouvelle carte</h2>
+      <p class="v-avertissement">⚠️ Pas de carte bancaire ici : Vallet n'est pas un portefeuille de paiement.</p>
+
+      <label>Nom <input type="text" id="v-f-nom" required maxlength="40" placeholder="Ex. Carrefour, Médiathèque…"></label>
+
+      <label>Catégorie
+        <select id="v-f-categorie"></select>
+      </label>
+
+      <div class="v-champ">Couleur<div class="v-couleurs" id="v-f-couleurs"></div></div>
+
+      <div class="v-bascule" role="tablist">
+        <button type="button" id="v-f-mode-code" class="actif">Code-barres / QR</button>
+        <button type="button" id="v-f-mode-photo">Photo</button>
+      </div>
+
+      <div id="v-f-bloc-code">
+        <label>Valeur du code <input type="text" id="v-f-valeur" autocomplete="off" inputmode="text" placeholder="Saisir ou scanner"></label>
+        <label>Format <select id="v-f-format"></select></label>
+        <button type="button" id="v-f-scanner" class="v-secondaire">📷 Scanner avec la caméra</button>
+        <div id="v-f-scan-zone" hidden>
+          <video id="v-f-video" playsinline muted></video>
+          <button type="button" id="v-f-scan-annuler" class="v-secondaire">Annuler le scan</button>
+        </div>
+        <div id="v-f-apercu" class="v-apercu-code"></div>
+      </div>
+
+      <div id="v-f-bloc-photo" hidden>
+        <label class="v-secondaire v-fichier">📸 Prendre ou choisir une photo
+          <input type="file" id="v-f-fichier" accept="image/*">
+        </label>
+        <img id="v-f-photo" class="v-apercu-photo" alt="" hidden>
+      </div>
+
+      <label>Notes (optionnel) <textarea id="v-f-notes" rows="2" maxlength="200" placeholder="N° d'adhérent, validité…"></textarea></label>
+
+      <p class="v-erreur" id="v-f-erreur" hidden></p>
+
+      <div class="v-boutons">
+        <button type="button" id="v-f-supprimer" class="v-danger" hidden>🗑️ Supprimer</button>
+        <button type="button" id="v-f-annuler" class="v-secondaire">Annuler</button>
+        <button type="submit" id="v-f-enregistrer" class="v-primaire">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Réglages -->
+  <dialog id="v-reglages" class="v-dialog">
+    <h2>Réglages</h2>
+    <section>
+      <h3>Sauvegarde</h3>
+      <p class="v-hint">Les cartes restent uniquement sur cet appareil. Crée un lien de sauvegarde à conserver (ou à t'envoyer par mail) : ouvre-le sur un nouveau téléphone pour tout retrouver, sans compte.</p>
+      <button type="button" id="v-sauvegarde-btn" class="v-secondaire">💾 Créer un lien de sauvegarde</button>
+      <p class="v-hint" id="v-sauvegarde-retour" hidden></p>
+    </section>
+    <section>
+      <h3>À propos</h3>
+      <p class="v-hint" id="v-version"></p>
+      <p class="v-hint" id="v-mention"></p>
+    </section>
+    <div class="v-boutons"><button type="button" id="v-reglages-fermer" class="v-primaire">Fermer</button></div>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

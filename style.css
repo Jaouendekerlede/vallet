@@ -1,0 +1,188 @@
+:root {
+  --fond: #0f1220;
+  --fond-2: #181c33;
+  --surface: rgba(255, 255, 255, 0.06);
+  --bordure: rgba(255, 255, 255, 0.12);
+  --texte: #f3f4fb;
+  --texte-att: rgba(243, 244, 251, 0.66);
+  --accent: #818cf8;
+  --rouge: #ff6b6b;
+  --or: #ffc857;
+  --rayon: 18px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--texte);
+  background: linear-gradient(180deg, var(--fond-2), var(--fond));
+  background-attachment: fixed;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+.v-app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 96px);
+}
+
+/* ── En-tête ── */
+.v-entete { display: flex; gap: 8px; align-items: center; }
+.v-entete h1 { margin: 0 6px 0 0; font-size: 1.5rem; letter-spacing: 0.5px; }
+.v-entete input[type="search"] { flex: 1; min-width: 0; }
+
+input, select, textarea {
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  padding: 10px 12px;
+  width: 100%;
+}
+.v-entete select { width: auto; max-width: 150px; }
+option { color: #111; }
+
+.v-icone-btn {
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+/* ── Filtres ── */
+.v-filtres { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 6px; scrollbar-width: none; }
+.v-filtres::-webkit-scrollbar { display: none; }
+.v-puce {
+  flex: none;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.v-puce.actif { background: var(--accent); border-color: var(--accent); color: #0f1220; font-weight: 600; }
+
+/* ── Grille de cartes ── */
+.v-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 8px; }
+
+.v-tuile {
+  position: relative;
+  aspect-ratio: 1.586;                 /* format carte bancaire, pour le coup d'œil */
+  border: 0;
+  border-radius: var(--rayon);
+  padding: 12px;
+  text-align: left;
+  color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 55%, #000));
+  box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.v-tuile:active { transform: scale(0.97); }
+.v-tuile .v-tuile-nom { font-weight: 700; font-size: 1.02rem; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45); overflow-wrap: anywhere; }
+.v-tuile .v-tuile-bas { display: flex; justify-content: space-between; align-items: end; font-size: 0.8rem; opacity: 0.92; }
+.v-tuile .v-tuile-star { position: absolute; top: 8px; right: 10px; font-size: 1.1rem; color: var(--or); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.v-tuile.photo { background: #000 center / cover no-repeat; }
+.v-tuile.photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 45%, rgba(0, 0, 0, 0.5)); }
+.v-tuile.photo > * { position: relative; z-index: 1; }
+
+.v-vide { grid-column: 1 / -1; text-align: center; color: var(--texte-att); padding: 60px 20px; line-height: 1.6; }
+
+.v-ajout {
+  position: fixed;
+  right: calc(env(safe-area-inset-right) + 20px);
+  bottom: calc(env(safe-area-inset-bottom) + 20px);
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  border: 0;
+  font-size: 2rem;
+  line-height: 1;
+  background: var(--accent);
+  color: #0f1220;
+  box-shadow: 0 14px 30px -10px rgba(129, 140, 248, 0.8);
+  cursor: pointer;
+}
+
+/* ── Plein écran (caisse) : fond blanc, code noir très grand ── */
+.v-plein {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #fff;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+}
+.v-plein[hidden] { display: none; }
+.v-plein-fermer { position: absolute; top: calc(env(safe-area-inset-top) + 12px); right: 14px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #eee; color: #111; font-size: 1.2rem; cursor: pointer; }
+.v-plein-nom { font-size: 1.5rem; font-weight: 700; text-align: center; padding: 0 50px; }
+.v-plein-corps { width: min(100%, 560px); display: flex; justify-content: center; }
+.v-plein-corps svg { width: 100%; height: auto; max-height: 62vh; }
+.v-plein-corps img { max-width: 100%; max-height: 72vh; border-radius: 14px; }
+.v-plein-valeur { font-family: ui-monospace, Consolas, monospace; font-size: 1.05rem; letter-spacing: 1px; color: #444; overflow-wrap: anywhere; text-align: center; }
+.v-plein-actions { display: flex; gap: 10px; }
+.v-plein-actions button { background: #eee; border: 0; color: #111; border-radius: 12px; padding: 10px 16px; cursor: pointer; }
+
+/* ── Dialogues ── */
+.v-dialog {
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  background: var(--fond-2);
+  color: var(--texte);
+  border: 1px solid var(--bordure);
+  border-radius: 22px;
+  padding: 18px;
+}
+.v-dialog::backdrop { background: rgba(0, 0, 0, 0.65); }
+.v-dialog h2 { margin: 0 0 10px; }
+.v-dialog h3 { margin: 16px 0 6px; font-size: 1rem; }
+.v-dialog label, .v-champ { display: block; margin-top: 12px; font-size: 0.88rem; color: var(--texte-att); }
+.v-dialog label input, .v-dialog label select, .v-dialog label textarea { margin-top: 5px; color: var(--texte); }
+
+.v-avertissement { background: rgba(255, 200, 87, 0.12); border: 1px solid rgba(255, 200, 87, 0.35); border-radius: 12px; padding: 8px 10px; font-size: 0.85rem; margin: 0; }
+.v-hint { font-size: 0.85rem; color: var(--texte-att); line-height: 1.5; margin: 6px 0; }
+.v-erreur { color: var(--rouge); font-size: 0.88rem; margin: 10px 0 0; }
+
+.v-couleurs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.v-couleurs button { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; background: var(--c); cursor: pointer; }
+.v-couleurs button.actif { border-color: #fff; }
+
+.v-bascule { display: flex; gap: 6px; margin-top: 16px; background: var(--surface); border-radius: 14px; padding: 4px; }
+.v-bascule button { flex: 1; border: 0; background: transparent; border-radius: 10px; padding: 8px; cursor: pointer; }
+.v-bascule button.actif { background: var(--accent); color: #0f1220; font-weight: 600; }
+
+#v-f-video { width: 100%; border-radius: 14px; margin-top: 10px; background: #000; }
+.v-apercu-code { background: #fff; border-radius: 14px; margin-top: 12px; padding: 6px; }
+.v-apercu-code:empty { display: none; }
+.v-apercu-code svg { width: 100%; max-height: 180px; }
+.v-apercu-photo { width: 100%; border-radius: 14px; margin-top: 12px; }
+.v-fichier { text-align: center; cursor: pointer; }
+.v-fichier input { display: none; }
+
+.v-boutons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+.v-boutons .v-danger { margin-right: auto; }
+.v-primaire, .v-secondaire, .v-danger {
+  border-radius: 12px;
+  padding: 10px 16px;
+  border: 1px solid var(--bordure);
+  background: var(--surface);
+  cursor: pointer;
+}
+.v-secondaire { display: block; width: 100%; margin-top: 12px; color: var(--texte); }
+.v-boutons .v-secondaire { width: auto; margin-top: 0; }
+.v-primaire { background: var(--accent); border-color: var(--accent); color: #0f1220; font-weight: 700; }
+.v-danger { color: var(--rouge); }
