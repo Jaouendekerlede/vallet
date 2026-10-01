@@ -4,13 +4,14 @@ import { CATEGORIES, COULEURS, FORMATS } from "./config.js";
 import { dessiner, deviner } from "./codes.js";
 import { reduirePhoto } from "./photo.js";
 import { disponible as scanDisponible, scanner } from "./scanner.js";
-import { enregistrerCarte, supprimerCarte, trouverCarte } from "./storage.js";
+import { dupliquerCarte, enregistrerCarte, supprimerCarte, trouverCarte } from "./storage.js";
 
 const $ = (id) => document.getElementById(id);
 let modif = null; // carte en cours de modification (null = nouvelle)
 let mode = "code";
 let couleur = COULEURS[5];
-let photo = null;
+let photos = { recto: null, verso: null };
+let slotCourant = "recto";
 let formatChoisiAuMain = false;
 let annulerScan = null;
 let surChangement = () => {};
@@ -26,6 +27,7 @@ function choisirMode(nouveau) {
   $("v-f-mode-photo").classList.toggle("actif", mode === "photo");
   $("v-f-bloc-code").hidden = mode !== "code";
   $("v-f-bloc-photo").hidden = mode !== "photo";
+  if (mode !== "code") arreterScan();
   montrerErreur("");
 }
 
@@ -44,6 +46,14 @@ function afficherCouleurs() {
     });
     conteneur.append(b);
   }
+}
+
+function majSlot(nom) {
+  const slot = document.querySelector(`.v-photo-slot[data-slot="${nom}"]`);
+  const img = slot.querySelector("img");
+  img.hidden = !photos[nom];
+  if (photos[nom]) img.src = photos[nom];
+  slot.querySelector('[data-act="retirer"]').hidden = !photos[nom];
 }
 
 async function majApercu() {
@@ -71,7 +81,7 @@ function arreterScan() {
 
 async function lancerScan() {
   if (!scanDisponible()) {
-    montrerErreur("Le scan par caméra n'est pas disponible sur ce navigateur (Chrome Android seulement). Saisis la valeur à la main, ou prends la carte en photo.");
+    montrerErreur("La caméra n'est pas accessible depuis ce navigateur. Saisis la valeur à la main, ou prends la carte en photo.");
     return;
   }
   montrerErreur("");
@@ -80,6 +90,7 @@ async function lancerScan() {
   try {
     const r = await scanner($("v-f-video"), annulerScan.signal);
     $("v-f-valeur").value = r.valeur;
+    navigator.vibrate?.(60);
     if (r.format) {
       $("v-f-format").value = r.format;
       formatChoisiAuMain = true;
@@ -90,27 +101,32 @@ async function lancerScan() {
     if (r.format) majApercu();
   } catch (e) {
     arreterScan();
-    if (e.message !== "scan annulé") montrerErreur(`Caméra indisponible : ${e.message}`);
+    if (e.message !== "scan annulé") montrerErreur(`Scan impossible : ${e.message || e.name}. Vérifie que l'autorisation caméra est accordée à l'appli.`);
   }
 }
 
-export function ouvrirFormulaire(id = null) {
+// `options.photo` : photo reçue par « Partager vers Vallet » (nouvelle carte en mode Photo).
+export function ouvrirFormulaire(id = null, options = {}) {
   modif = id ? trouverCarte(id) : null;
   $("v-form-titre").textContent = modif ? "Modifier la carte" : "Nouvelle carte";
   $("v-f-supprimer").hidden = !modif;
+  $("v-f-dupliquer").hidden = !modif;
   $("v-f-nom").value = modif?.nom ?? "";
   $("v-f-categorie").value = modif?.categorie ?? "fidelite";
+  $("v-f-etiquettes").value = (modif?.etiquettes ?? []).join(", ");
+  $("v-f-validite").value = modif?.validite ?? "";
+  $("v-f-solde").value = modif?.solde ?? "";
   $("v-f-notes").value = modif?.notes ?? "";
   couleur = modif?.couleur ?? COULEURS[Math.floor(Math.random() * COULEURS.length)];
   afficherCouleurs();
-  photo = modif?.type === "photo" ? modif.photo : null;
-  $("v-f-photo").hidden = !photo;
-  if (photo) $("v-f-photo").src = photo;
+  photos = { recto: modif?.type === "photo" ? modif.photo : (options.photo ?? null), verso: modif?.photoVerso ?? null };
+  majSlot("recto");
+  majSlot("verso");
   $("v-f-valeur").value = modif?.type === "code" ? modif.code.valeur : "";
   $("v-f-format").value = modif?.type === "code" ? modif.code.format : "CODE128";
   formatChoisiAuMain = !!modif;
   $("v-f-apercu").replaceChildren();
-  choisirMode(modif?.type ?? "code");
+  choisirMode(modif?.type ?? (options.photo ? "photo" : "code"));
   $("v-form").showModal();
   if (modif?.type === "code") majApercu();
 }
@@ -124,7 +140,16 @@ async function enregistrer(e) {
   e.preventDefault();
   const nom = $("v-f-nom").value.trim();
   if (!nom) return montrerErreur("Donne un nom à la carte.");
-  const carte = { nom, categorie: $("v-f-categorie").value, couleur, notes: $("v-f-notes").value.trim(), type: mode };
+  const carte = {
+    nom,
+    categorie: $("v-f-categorie").value,
+    couleur,
+    notes: $("v-f-notes").value.trim(),
+    etiquettes: [...new Set($("v-f-etiquettes").value.split(",").map((t) => t.trim()).filter(Boolean))],
+    validite: $("v-f-validite").value,
+    solde: $("v-f-solde").value.trim(),
+    type: mode,
+  };
   if (mode === "code") {
     const valeur = $("v-f-valeur").value.trim();
     if (!valeur) return montrerErreur("Saisis ou scanne la valeur du code (ou passe en mode Photo).");
@@ -135,13 +160,15 @@ async function enregistrer(e) {
     }
     carte.code = { valeur, format: $("v-f-format").value };
     carte.photo = null;
+    carte.photoVerso = null;
   } else {
-    if (!photo) return montrerErreur("Ajoute une photo de la carte (ou passe en mode Code-barres).");
-    carte.photo = photo;
+    if (!photos.recto) return montrerErreur("Ajoute au moins la photo du recto (ou passe en mode Code-barres).");
+    carte.photo = photos.recto;
+    carte.photoVerso = photos.verso;
     carte.code = null;
   }
   if (modif) carte.id = modif.id;
-  if (!enregistrerCarte(carte)) return montrerErreur("Stockage de l'appareil plein : supprime une carte ou utilise une photo plus petite.");
+  if (!enregistrerCarte(carte)) return montrerErreur("Stockage de l'appareil plein : supprime une carte ou retire le verso d'une photo.");
   fermer();
   surChangement();
 }
@@ -163,21 +190,48 @@ export function initialiserFormulaire(apresChangement) {
   });
   $("v-f-scanner").addEventListener("click", lancerScan);
   $("v-f-scan-annuler").addEventListener("click", arreterScan);
-  $("v-f-fichier").addEventListener("change", async (e) => {
+
+  // Photos : boutons explicites « Prendre » (caméra) et « Galerie », qui
+  // déclenchent des champs fichier cachés (plus fiable sur mobile qu'un champ
+  // fichier caché dans un libellé).
+  for (const slot of document.querySelectorAll(".v-photo-slot")) {
+    const nom = slot.dataset.slot;
+    slot.querySelector('[data-act="camera"]').addEventListener("click", () => {
+      slotCourant = nom;
+      $("v-f-fichier-camera").click();
+    });
+    slot.querySelector('[data-act="galerie"]').addEventListener("click", () => {
+      slotCourant = nom;
+      $("v-f-fichier-galerie").click();
+    });
+    slot.querySelector('[data-act="retirer"]').addEventListener("click", () => {
+      photos[nom] = null;
+      majSlot(nom);
+    });
+  }
+  async function fichierChoisi(e) {
     const fichier = e.target.files[0];
+    e.target.value = "";
     if (!fichier) return;
     try {
-      photo = await reduirePhoto(fichier);
-      $("v-f-photo").src = photo;
-      $("v-f-photo").hidden = false;
+      photos[slotCourant] = await reduirePhoto(fichier);
+      majSlot(slotCourant);
       montrerErreur("");
     } catch {
       montrerErreur("Image illisible, essaie une autre photo.");
     }
-    e.target.value = "";
-  });
+  }
+  $("v-f-fichier-camera").addEventListener("change", fichierChoisi);
+  $("v-f-fichier-galerie").addEventListener("change", fichierChoisi);
+
   $("v-f-annuler").addEventListener("click", fermer);
   $("v-form").addEventListener("cancel", arreterScan);
+  $("v-f-dupliquer").addEventListener("click", () => {
+    if (modif && dupliquerCarte(modif.id)) {
+      fermer();
+      surChangement();
+    } else montrerErreur("Stockage de l'appareil plein : impossible de dupliquer.");
+  });
   $("v-f-supprimer").addEventListener("click", () => {
     if (modif && confirm(`Supprimer la carte « ${modif.nom} » ?`)) {
       supprimerCarte(modif.id);

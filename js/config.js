@@ -39,6 +39,23 @@ export const FORMATS_SCANNER = {
   itf: "ITF",
 };
 
+// Même chose pour le scanner de secours (ZXing), qui nomme les formats autrement.
+export const FORMATS_ZXING = {
+  QR_CODE: "QR",
+  CODE_128: "CODE128",
+  EAN_13: "EAN13",
+  EAN_8: "EAN8",
+  UPC_A: "UPC",
+  CODE_39: "CODE39",
+  ITF: "ITF",
+};
+
 // Photo : assez nette pour lire un code, assez légère pour le localStorage.
 export const PHOTO_LARGEUR_MAX = 1000;
 export const PHOTO_QUALITE = 0.7;
+
+export const EXPIRE_BIENTOT_JOURS = 30;
+// Le localStorage tient environ 5 millions de caractères (varie selon le navigateur).
+export const QUOTA_APPROX = 5_000_000;
+export const DELAI_VERROU_MS = 30_000;
+export const RAPPEL_SAUVEGARDE_JOURS = 90;

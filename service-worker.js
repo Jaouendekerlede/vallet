@@ -2,8 +2,10 @@
 // jour publiée est prise tout de suite), la copie ne sert que sans réseau.
 // Les cartes sont dans le localStorage : rien d'autre à mettre en cache.
 
-const CACHE_NOM = "vallet-v1";
-const FICHIERS_COQUILLE = ["./", "./index.html", "./style.css", "./manifest.json", "./js/main.js", "./js/grille.js", "./js/plein-ecran.js", "./js/formulaire.js", "./js/reglages.js", "./js/storage.js", "./js/config.js", "./js/mentions.js", "./js/restauration.js", "./js/codes.js", "./js/scanner.js", "./js/photo.js", "./js/vendor/qrcode-generator.js", "./js/vendor/JsBarcode.all.min.js", "./icons/icon-192.png", "./icons/icon-512.png"];
+const CACHE_NOM = "vallet-v2";
+// Le scanner de secours (zxing-library, 330 Ko) n'est pas préchargé : il est
+// mis en cache à sa première utilisation par le gestionnaire fetch ci-dessous.
+const FICHIERS_COQUILLE = ["./", "./index.html", "./style.css", "./manifest.json", "./js/main.js", "./js/grille.js", "./js/plein-ecran.js", "./js/formulaire.js", "./js/reglages.js", "./js/storage.js", "./js/config.js", "./js/mentions.js", "./js/restauration.js", "./js/codes.js", "./js/scanner.js", "./js/photo.js", "./js/chargeur.js", "./js/validite.js", "./js/theme.js", "./js/verrou.js", "./js/partage.js", "./js/vendor/qrcode-generator.js", "./js/vendor/JsBarcode.all.min.js", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -23,8 +25,24 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// « Partager vers Vallet » (Android) : l'image arrive en POST ; on la range
+// dans un cache le temps que l'appli la reprenne, puis on ouvre l'appli.
+async function recevoirPartage(requete) {
+  try {
+    const image = (await requete.formData()).get("image");
+    if (image) await (await caches.open("vallet-partage")).put(new URL("image-partagee", self.registration.scope).href, new Response(image));
+  } catch {
+    // Partage illisible : l'appli s'ouvrira simplement sans photo.
+  }
+  return Response.redirect(new URL("index.html?partage=1", self.registration.scope).href, 303);
+}
+
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+  if (event.request.method === "POST" && url.origin === self.location.origin && url.pathname.endsWith("/partage")) {
+    event.respondWith(recevoirPartage(event.request));
+    return;
+  }
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
   event.respondWith(
     fetch(event.request.url, { cache: "no-cache" })

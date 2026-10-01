@@ -1,23 +1,9 @@
-// Génération des codes-barres / QR codes. Les deux petites bibliothèques
-// (js/vendor/) ne sont chargées qu'à la première utilisation, même principe
-// que Leaflet dans radar.js de MeteoAI. Elles sont dans le dépôt (pas sur un
-// CDN) pour que le plein écran en caisse marche aussi sans réseau.
+// Génération des codes-barres / QR codes. Les petites bibliothèques
+// (js/vendor/) ne sont chargées qu'à la première utilisation. Elles sont dans
+// le dépôt (pas sur un CDN) pour que le plein écran en caisse marche aussi
+// sans réseau.
 
-const chargees = {};
-
-function chargerScript(src) {
-  chargees[src] ??= new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = () => {
-      delete chargees[src];
-      reject(new Error("bibliothèque de codes introuvable"));
-    };
-    document.head.appendChild(s);
-  });
-  return chargees[src];
-}
+import { chargerScript } from "./chargeur.js";
 
 // Format le plus probable d'après la valeur saisie (modifiable ensuite).
 export function deviner(valeur) {
@@ -61,7 +47,8 @@ export async function dessiner(conteneur, valeur, format) {
     conteneur.replaceChildren();
     throw new Error(e.message || "valeur impossible dans ce format");
   }
-  // Le SVG doit s'adapter à la largeur disponible.
+  // Le SVG doit s'adapter à la largeur disponible (et rester exportable en image).
+  if (!svg.getAttribute("viewBox")) svg.setAttribute("viewBox", `0 0 ${svg.getAttribute("width")} ${svg.getAttribute("height")}`);
   svg.removeAttribute("width");
   svg.removeAttribute("height");
   svg.style.width = "100%";

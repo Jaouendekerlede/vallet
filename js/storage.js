@@ -22,6 +22,9 @@ function ecrireJson(cle, valeur) {
   }
 }
 
+// Ordre manuel : `ordre` si la carte a été déplacée, sinon sa date de création.
+export const parOrdre = (a, b) => (a.ordre ?? a.creeLe) - (b.ordre ?? b.creeLe);
+
 export function listerCartes() {
   return lireJson(STORAGE_KEYS.cartes, []);
 }
@@ -41,7 +44,19 @@ export function enregistrerCarte(carte) {
     resultat = { ...cartes[i], ...carte };
     cartes[i] = resultat;
   } else {
-    resultat = { favori: false, notes: "", ouvertLe: 0, ...carte, id: `c_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 5)}`, creeLe: maintenant };
+    resultat = {
+      favori: false,
+      notes: "",
+      etiquettes: [],
+      validite: "",
+      solde: "",
+      photoVerso: null,
+      ouvertLe: 0,
+      ...carte,
+      id: `c_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 5)}`,
+      creeLe: maintenant,
+      ordre: maintenant,
+    };
     cartes.push(resultat);
   }
   return ecrireJson(STORAGE_KEYS.cartes, cartes) ? resultat : null;
@@ -60,6 +75,33 @@ export function noterOuverture(id) {
   enregistrerCarte({ id, ouvertLe: Date.now() });
 }
 
+// Décale une carte dans l'ordre manuel (delta = -1 vers le début, +1 vers la fin).
+export function deplacerCarte(id, delta) {
+  const cartes = listerCartes().sort(parOrdre);
+  const i = cartes.findIndex((c) => c.id === id);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= cartes.length) return;
+  [cartes[i], cartes[j]] = [cartes[j], cartes[i]];
+  cartes.forEach((c, k) => (c.ordre = k));
+  ecrireJson(STORAGE_KEYS.cartes, cartes);
+}
+
+export function dupliquerCarte(id) {
+  const carte = trouverCarte(id);
+  if (!carte) return null;
+  const { id: _id, creeLe, ordre, ...reste } = carte;
+  return enregistrerCarte({ ...reste, nom: `${carte.nom} (copie)`, favori: false, ouvertLe: 0 });
+}
+
+// Ajoute une carte reçue par un lien de partage (jamais d'écrasement).
+export function importerCarte(carte) {
+  if (typeof carte?.nom !== "string" || !["code", "photo"].includes(carte.type)) throw new Error("ce lien n'est pas une carte Vallet");
+  const { id, creeLe, ordre, ...reste } = carte;
+  const ajoutee = enregistrerCarte({ ...reste, favori: false, ouvertLe: 0 });
+  if (!ajoutee) throw new Error("stockage de l'appareil plein");
+  return ajoutee;
+}
+
 export function lireReglages() {
   return lireJson(STORAGE_KEYS.reglages, {});
 }
@@ -72,13 +114,21 @@ export function sauverReglages(partiel) {
 const PREFIXE = "vallet_";
 const FORMAT_SAUVEGARDE = "vallet-sauvegarde";
 
+function clesVallet() {
+  const cles = [];
+  for (let i = 0; i < localStorage.length; i++) if (localStorage.key(i)?.startsWith(PREFIXE)) cles.push(localStorage.key(i));
+  return cles;
+}
+
+// Nombre de caractères occupés dans le localStorage par Vallet.
+export function espaceUtilise() {
+  return clesVallet().reduce((total, cle) => total + cle.length + (localStorage.getItem(cle)?.length ?? 0), 0);
+}
+
 export function exporterDonnees() {
   const donnees = {};
-  for (let i = 0; i < localStorage.length; i++) {
-    const cle = localStorage.key(i);
-    if (cle?.startsWith(PREFIXE)) donnees[cle] = localStorage.getItem(cle);
-  }
-  return { format: FORMAT_SAUVEGARDE, version: 1, date: new Date().toISOString(), donnees };
+  for (const cle of clesVallet()) donnees[cle] = localStorage.getItem(cle);
+  return { format: FORMAT_SAUVEGARDE, version: 2, date: new Date().toISOString(), donnees };
 }
 
 // Remplace les données de cet appareil par celles de la sauvegarde. Renvoie
@@ -88,9 +138,12 @@ export function importerDonnees(sauvegarde) {
     throw new Error("ce lien n'est pas une sauvegarde Vallet");
   }
   const entrees = Object.entries(sauvegarde.donnees).filter(([cle, valeur]) => cle.startsWith(PREFIXE) && typeof valeur === "string");
-  const anciennes = [];
-  for (let i = 0; i < localStorage.length; i++) if (localStorage.key(i)?.startsWith(PREFIXE)) anciennes.push(localStorage.key(i));
-  for (const cle of anciennes) localStorage.removeItem(cle);
+  for (const cle of clesVallet()) localStorage.removeItem(cle);
   for (const [cle, valeur] of entrees) localStorage.setItem(cle, valeur);
   return entrees.length;
+}
+
+// Efface toutes les données de Vallet sur cet appareil (code PIN oublié).
+export function toutEffacer() {
+  for (const cle of clesVallet()) localStorage.removeItem(cle);
 }
