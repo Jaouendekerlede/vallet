@@ -102,6 +102,8 @@
           <video id="v-f-video" playsinline muted></video>
           <button type="button" id="v-f-scan-annuler" class="v-secondaire">Annuler le scan</button>
         </div>
+        <button type="button" id="v-f-lire-image" class="v-secondaire">🖼️ Lire le code depuis une image (capture d'écran…)</button>
+        <input type="file" id="v-f-fichier-code" class="v-cache" accept="image/*" tabindex="-1">
         <label>…ou saisir la valeur du code <input type="text" id="v-f-valeur" autocomplete="off" inputmode="text" placeholder="Valeur du code"></label>
         <label>Format <select id="v-f-format"></select></label>
         <div id="v-f-apercu" class="v-apercu-code"></div>

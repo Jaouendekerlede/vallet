@@ -2,8 +2,8 @@
 
 export const PROPRIETAIRE = "Jean-Luc RIO";
 export const ANNEE = 2026;
-export const VERSION = 2;
-export const VERSION_TEXTE = "Version 2 : thème clair/sombre, recto/verso, validité et solde, étiquettes, ordre manuel, code PIN, partage d'une carte, scanner de secours, correction de l'import photo";
+export const VERSION = 3;
+export const VERSION_TEXTE = "Version 3 : lecture du code depuis une image (capture d'écran de Google Wallet). Version 2 :thème clair/sombre, recto/verso, validité et solde, étiquettes, ordre manuel, code PIN, partage d'une carte, scanner de secours, correction de l'import photo";
 
 export const MENTION_COURTE = `© ${ANNEE} ${PROPRIETAIRE} — Tous droits réservés`;
 

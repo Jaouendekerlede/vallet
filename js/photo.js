@@ -5,7 +5,7 @@ import { PHOTO_LARGEUR_MAX, PHOTO_QUALITE } from "./config.js";
 
 // Plusieurs méthodes de lecture : certains navigateurs mobiles refusent
 // createImageBitmap avec des options, ou certains formats (HEIC...).
-async function ouvrirImage(fichier) {
+export async function ouvrirImage(fichier) {
   try {
     return await createImageBitmap(fichier, { imageOrientation: "from-image" });
   } catch {

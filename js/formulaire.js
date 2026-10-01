@@ -3,7 +3,7 @@
 import { CATEGORIES, COULEURS, FORMATS } from "./config.js";
 import { dessiner, deviner } from "./codes.js";
 import { reduirePhoto } from "./photo.js";
-import { disponible as scanDisponible, scanner } from "./scanner.js";
+import { disponible as scanDisponible, lireImage, scanner } from "./scanner.js";
 import { dupliquerCarte, enregistrerCarte, supprimerCarte, trouverCarte } from "./storage.js";
 
 const $ = (id) => document.getElementById(id);
@@ -190,6 +190,30 @@ export function initialiserFormulaire(apresChangement) {
   });
   $("v-f-scanner").addEventListener("click", lancerScan);
   $("v-f-scan-annuler").addEventListener("click", arreterScan);
+
+  // Lecture du code depuis une image (ex. capture d'écran d'une carte Google Wallet).
+  $("v-f-lire-image").addEventListener("click", () => $("v-f-fichier-code").click());
+  $("v-f-fichier-code").addEventListener("change", async (e) => {
+    const fichier = e.target.files[0];
+    e.target.value = "";
+    if (!fichier) return;
+    montrerErreur("Lecture de l'image…");
+    try {
+      const r = await lireImage(fichier);
+      $("v-f-valeur").value = r.valeur;
+      if (r.format) {
+        $("v-f-format").value = r.format;
+        formatChoisiAuMain = true;
+        montrerErreur("");
+        majApercu();
+      } else {
+        montrerErreur(`Code lu (${r.formatBrut}), mais ce format ne peut pas être redessiné en caisse. Garde plutôt la capture comme carte en mode Photo.`);
+      }
+      navigator.vibrate?.(60);
+    } catch (err) {
+      montrerErreur(`${err.message}. Essaie une capture plus nette (code entier, sans reflet), ou utilise le mode Photo.`);
+    }
+  });
 
   // Photos : boutons explicites « Prendre » (caméra) et « Galerie », qui
   // déclenchent des champs fichier cachés (plus fiable sur mobile qu'un champ

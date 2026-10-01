@@ -6,6 +6,7 @@
 
 import { FORMATS_SCANNER, FORMATS_ZXING } from "./config.js";
 import { chargerScript } from "./chargeur.js";
+import { ouvrirImage } from "./photo.js";
 
 export function disponible() {
   return !!navigator.mediaDevices?.getUserMedia;
@@ -52,6 +53,35 @@ async function scannerZxing(video, signal) {
         reject(e);
       });
   });
+}
+
+// Lit le code d'une image déjà prise (ex. capture d'écran d'une carte dans
+// Google Wallet). Essaie le lecteur natif, puis ZXing (plus patient) si rien
+// n'est trouvé. Renvoie le même résultat que scanner(), ou lève une erreur.
+export async function lireImage(fichier) {
+  if ("BarcodeDetector" in window) {
+    const image = await ouvrirImage(fichier);
+    try {
+      const trouves = await new window.BarcodeDetector().detect(image);
+      if (trouves.length) return { valeur: trouves[0].rawValue, format: FORMATS_SCANNER[trouves[0].format] ?? null, formatBrut: trouves[0].format };
+    } catch {
+      // Lecteur natif en échec : on tente ZXing.
+    } finally {
+      image.close?.();
+    }
+  }
+  await chargerScript("js/vendor/zxing-library.min.js");
+  const ZX = window.ZXing;
+  const url = URL.createObjectURL(fichier);
+  try {
+    const resultat = await new ZX.BrowserMultiFormatReader().decodeFromImageUrl(url);
+    const brut = ZX.BarcodeFormat[resultat.getBarcodeFormat()];
+    return { valeur: resultat.getText(), format: FORMATS_ZXING[brut] ?? null, formatBrut: brut };
+  } catch {
+    throw new Error("aucun code lisible dans cette image");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 // Ouvre la caméra dans `video` jusqu'à lire un code. Renvoie
