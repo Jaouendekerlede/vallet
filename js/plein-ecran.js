@@ -7,7 +7,7 @@ import { dessiner, deviner } from "./codes.js";
 import { sourceLogo } from "./logos.js";
 import { creerLienCarte } from "./restauration.js";
 import { partagerImage } from "./partage.js";
-import { trouverCarte, basculerFavori, noterOuverture } from "./storage.js";
+import { trouverCarte, basculerFavori, noterOuverture, supprimerCarte } from "./storage.js";
 import { dateLongue, etatValidite, formaterSolde } from "./validite.js";
 
 const $ = (id) => document.getElementById(id);
@@ -115,6 +115,11 @@ export function initialiserPleinEcran({ apresChangement, modifier }) {
     const id = carteOuverte?.id;
     fermerPleinEcran();
     if (id) surModifier(id);
+  });
+  $("v-plein-supprimer").addEventListener("click", () => {
+    if (!carteOuverte || !confirm(`Supprimer la carte « ${carteOuverte.nom} » ? Cette action est définitive (sauf si tu as un lien de sauvegarde).`)) return;
+    supprimerCarte(carteOuverte.id);
+    fermerPleinEcran();
   });
   $("v-plein-agrandir").addEventListener("click", () => {
     const zoom = $("v-plein").classList.toggle("zoom");

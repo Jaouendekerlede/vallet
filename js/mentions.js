@@ -2,8 +2,8 @@
 
 export const PROPRIETAIRE = "Jean-Luc RIO";
 export const ANNEE = 2026;
-export const VERSION = 4;
-export const VERSION_TEXTE = "Version 4 : logos d'enseignes (site ou image perso). Version 3 :lecture du code depuis une image (capture d'écran de Google Wallet). Version 2 :thème clair/sombre, recto/verso, validité et solde, étiquettes, ordre manuel, code PIN, partage d'une carte, scanner de secours, correction de l'import photo";
+export const VERSION = 5;
+export const VERSION_TEXTE = "Version 5 : bouton Supprimer directement dans l'écran de la carte. Version 4 :logos d'enseignes (site ou image perso). Version 3 :lecture du code depuis une image (capture d'écran de Google Wallet). Version 2 :thème clair/sombre, recto/verso, validité et solde, étiquettes, ordre manuel, code PIN, partage d'une carte, scanner de secours, correction de l'import photo";
 
 export const MENTION_COURTE = `© ${ANNEE} ${PROPRIETAIRE} — Tous droits réservés`;
 

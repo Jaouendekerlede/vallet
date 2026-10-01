@@ -217,6 +217,7 @@ input[type="checkbox"] { width: auto; }
 .v-plein-info { color: #555; font-size: 0.95rem; text-align: center; }
 .v-plein-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .v-plein-actions button { background: #eee; border: 0; color: #111; border-radius: 12px; padding: 9px 13px; cursor: pointer; font-size: 0.9rem; }
+.v-plein-actions .v-plein-danger { background: #fde8e8; color: #b42318; }
 .v-plein-actions button[hidden] { display: none; }
 
 /* ── Verrou PIN ── */
