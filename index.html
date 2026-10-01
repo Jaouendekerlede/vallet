@@ -48,6 +48,7 @@
   <!-- Plein écran pour le passage en caisse -->
   <div id="v-plein" class="v-plein" hidden>
     <button type="button" class="v-plein-fermer" id="v-plein-fermer" aria-label="Fermer">✕</button>
+    <img class="v-plein-logo" id="v-plein-logo" alt="" hidden>
     <div class="v-plein-nom" id="v-plein-nom"></div>
     <div class="v-plein-corps" id="v-plein-corps"></div>
     <div class="v-plein-valeur" id="v-plein-valeur"></div>
@@ -88,6 +89,20 @@
       <label>Étiquettes (optionnel, séparées par des virgules)
         <input type="text" id="v-f-etiquettes" maxlength="80" placeholder="Ex. courses, famille">
       </label>
+
+      <div class="v-champ">Logo (optionnel)
+        <div class="v-logo-ligne">
+          <span class="v-logo-apercu" id="v-f-logo-apercu">?</span>
+          <input type="text" id="v-f-site" inputmode="url" autocapitalize="off" placeholder="Site de l'enseigne, ex. carrefour.fr">
+        </div>
+        <div class="v-photo-boutons">
+          <button type="button" id="v-f-logo-chercher">🔎 Trouver le logo</button>
+          <button type="button" id="v-f-logo-image">🖼️ Mon image</button>
+          <button type="button" id="v-f-logo-retirer" hidden>✕ Retirer</button>
+        </div>
+        <input type="file" id="v-f-fichier-logo" class="v-cache" accept="image/*" tabindex="-1">
+        <p class="v-hint" id="v-f-logo-msg" hidden></p>
+      </div>
 
       <div class="v-champ">Couleur<div class="v-couleurs" id="v-f-couleurs"></div></div>
 

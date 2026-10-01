@@ -4,6 +4,7 @@
 // blanc aide, mais il faut monter la luminosité à la main si le scan peine.
 
 import { dessiner, deviner } from "./codes.js";
+import { sourceLogo } from "./logos.js";
 import { creerLienCarte } from "./restauration.js";
 import { partagerImage } from "./partage.js";
 import { trouverCarte, basculerFavori, noterOuverture } from "./storage.js";
@@ -75,6 +76,12 @@ export async function ouvrirPleinEcran(id) {
   $("v-plein").style.setProperty("--c", carte.couleur);
   $("v-plein").classList.remove("zoom");
   $("v-plein-nom").textContent = carte.nom;
+  const logo = $("v-plein-logo");
+  const source = sourceLogo(carte);
+  logo.hidden = true;
+  logo.onload = () => (logo.hidden = false);
+  logo.onerror = () => (logo.hidden = true);
+  if (source) logo.src = source;
   $("v-plein-favori").textContent = carte.favori ? "★ Favori" : "☆ Favori";
   afficherInfos(carte);
   $("v-plein").hidden = false;

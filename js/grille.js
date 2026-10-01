@@ -3,6 +3,7 @@
 
 import { CATEGORIES, RAPPEL_SAUVEGARDE_JOURS } from "./config.js";
 import { deplacerCarte, listerCartes, lireReglages, parOrdre, sauverReglages } from "./storage.js";
+import { sourceLogo } from "./logos.js";
 import { etatValidite, formaterSolde } from "./validite.js";
 
 const $ = (id) => document.getElementById(id);
@@ -49,6 +50,19 @@ function creerTuile(carte, index, manuel) {
   const cat = CATEGORIES.find((c) => c.id === carte.categorie) ?? CATEGORIES[CATEGORIES.length - 1];
   // Pas de vrai logo d'enseigne (droits + poids) : une initiale dans un rond.
   const badge = element("span", "v-badge", (carte.nom.match(/[\p{L}\p{N}]/u)?.[0] ?? "•").toUpperCase());
+  // Logo facultatif (voir logos.js) : remplace l'initiale une fois chargé ;
+  // s'il est introuvable ou hors-ligne, l'initiale reste.
+  const source = sourceLogo(carte);
+  if (source) {
+    const img = new Image();
+    img.alt = "";
+    img.addEventListener("load", () => {
+      badge.textContent = "";
+      badge.classList.add("logo");
+      badge.append(img);
+    });
+    img.src = source;
+  }
 
   const droite = element("span", "v-droite");
   if (carte.favori) droite.append(element("span", "v-tuile-star", "★"));

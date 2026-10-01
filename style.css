@@ -142,6 +142,8 @@ input[type="checkbox"] { width: auto; }
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
+.v-badge.logo { background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); padding: 4px; }
+.v-badge img { width: 100%; height: 100%; object-fit: contain; }
 .v-droite { grid-area: droite; justify-self: end; display: flex; gap: 4px; align-items: center; }
 .v-tuile-star { font-size: 1.15rem; color: var(--or); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
 .v-fleche { border: 0; border-radius: 8px; width: 28px; height: 28px; background: rgba(0, 0, 0, 0.4); color: #fff; cursor: pointer; }
@@ -203,6 +205,8 @@ input[type="checkbox"] { width: auto; }
 }
 .v-plein[hidden] { display: none; }
 .v-plein-fermer { position: absolute; top: calc(env(safe-area-inset-top) + 8px); right: 8px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #eee; color: #111; font-size: 1.2rem; cursor: pointer; }
+.v-plein-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 12px; background: #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25); padding: 4px; }
+.v-plein-logo[hidden] { display: none; }
 .v-plein-nom { font-size: 1.5rem; font-weight: 700; text-align: center; padding: 0 46px; }
 .v-plein-corps { width: min(100%, 520px); display: flex; justify-content: center; transition: width 0.2s ease; }
 .v-plein.zoom .v-plein-corps { width: min(100%, 900px); }
@@ -271,6 +275,9 @@ progress { width: 100%; height: 10px; accent-color: var(--accent); }
 .v-apercu-code:empty { display: none; }
 .v-apercu-code svg { width: 100%; max-height: 180px; }
 
+.v-logo-ligne { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
+.v-logo-apercu { flex: none; width: 48px; height: 48px; border-radius: 12px; background: #fff; color: #888; display: grid; place-items: center; font-weight: 800; overflow: hidden; border: 1px solid var(--bordure); }
+.v-logo-apercu img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
 .v-photo-slot { margin-top: 14px; }
 .v-photo-boutons { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
 .v-photo-boutons button { flex: 1; min-width: 100px; padding: 12px; border-radius: 12px; border: 1px solid var(--bordure); background: var(--surface); cursor: pointer; }

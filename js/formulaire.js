@@ -4,6 +4,7 @@ import { CATEGORIES, COULEURS, FORMATS } from "./config.js";
 import { dessiner, deviner } from "./codes.js";
 import { reduirePhoto } from "./photo.js";
 import { disponible as scanDisponible, lireImage, scanner } from "./scanner.js";
+import { faviconExiste, logoDepuisFichier, nettoyerDomaine, sourceLogo, suggererSite } from "./logos.js";
 import { dupliquerCarte, enregistrerCarte, supprimerCarte, trouverCarte } from "./storage.js";
 
 const $ = (id) => document.getElementById(id);
@@ -14,7 +15,42 @@ let photos = { recto: null, verso: null };
 let slotCourant = "recto";
 let formatChoisiAuMain = false;
 let annulerScan = null;
+let logo = { site: "", image: null }; // site = favicon d'un site, image = image choisie
+let siteSaisiAuMain = false;
+let delaiSuggestion = null;
 let surChangement = () => {};
+
+function majLogo() {
+  const zone = $("v-f-logo-apercu");
+  const source = sourceLogo({ logo: logo.image, logoSite: logo.site });
+  zone.replaceChildren();
+  if (source) {
+    const img = new Image();
+    img.alt = "";
+    img.src = source;
+    zone.append(img);
+  } else zone.textContent = "?";
+  $("v-f-logo-retirer").hidden = !source;
+}
+
+function messageLogo(texte) {
+  $("v-f-logo-msg").textContent = texte ?? "";
+  $("v-f-logo-msg").hidden = !texte;
+}
+
+async function chercherLogo() {
+  const domaine = nettoyerDomaine($("v-f-site").value);
+  if (!domaine) return messageLogo("Saisis le site de l'enseigne, par exemple carrefour.fr.");
+  messageLogo("Recherche du logo…");
+  if (await faviconExiste(domaine)) {
+    logo = { site: domaine, image: null };
+    $("v-f-site").value = domaine;
+    majLogo();
+    messageLogo("✅ Logo trouvé. C'est le petit logo du site : sa netteté dépend de l'enseigne. Il se charge depuis Internet (puis reste en mémoire pour le hors-ligne).");
+  } else {
+    messageLogo("Aucun logo trouvé pour ce site (ou pas de réseau). Tu peux choisir ta propre image, ou garder l'initiale.");
+  }
+}
 
 function montrerErreur(texte) {
   $("v-f-erreur").textContent = texte ?? "";
@@ -119,6 +155,11 @@ export function ouvrirFormulaire(id = null, options = {}) {
   $("v-f-notes").value = modif?.notes ?? "";
   couleur = modif?.couleur ?? COULEURS[Math.floor(Math.random() * COULEURS.length)];
   afficherCouleurs();
+  logo = { site: modif?.logoSite ?? "", image: modif?.logo ?? null };
+  $("v-f-site").value = logo.site;
+  siteSaisiAuMain = !!modif;
+  messageLogo("");
+  majLogo();
   photos = { recto: modif?.type === "photo" ? modif.photo : (options.photo ?? null), verso: modif?.photoVerso ?? null };
   majSlot("recto");
   majSlot("verso");
@@ -148,6 +189,8 @@ async function enregistrer(e) {
     etiquettes: [...new Set($("v-f-etiquettes").value.split(",").map((t) => t.trim()).filter(Boolean))],
     validite: $("v-f-validite").value,
     solde: $("v-f-solde").value.trim(),
+    logo: logo.image,
+    logoSite: logo.site,
     type: mode,
   };
   if (mode === "code") {
@@ -177,6 +220,42 @@ export function initialiserFormulaire(apresChangement) {
   surChangement = apresChangement;
   $("v-f-categorie").replaceChildren(...CATEGORIES.map((c) => new Option(`${c.icone} ${c.nom}`, c.id)));
   $("v-f-format").replaceChildren(...FORMATS.map((f) => new Option(f.nom, f.id)));
+  // Logo : site -> favicon, ou image perso. Pré-remplit le site d'après le nom.
+  $("v-f-nom").addEventListener("input", () => {
+    clearTimeout(delaiSuggestion);
+    delaiSuggestion = setTimeout(() => {
+      if (siteSaisiAuMain || logo.image) return;
+      const site = suggererSite($("v-f-nom").value);
+      if (site && site !== $("v-f-site").value) {
+        $("v-f-site").value = site;
+        chercherLogo();
+      }
+    }, 500);
+  });
+  $("v-f-site").addEventListener("input", () => (siteSaisiAuMain = true));
+  $("v-f-logo-chercher").addEventListener("click", chercherLogo);
+  $("v-f-logo-image").addEventListener("click", () => $("v-f-fichier-logo").click());
+  $("v-f-fichier-logo").addEventListener("change", async (e) => {
+    const fichier = e.target.files[0];
+    e.target.value = "";
+    if (!fichier) return;
+    try {
+      logo = { site: "", image: await logoDepuisFichier(fichier) };
+      $("v-f-site").value = "";
+      siteSaisiAuMain = true;
+      majLogo();
+      messageLogo("");
+    } catch {
+      messageLogo("Image illisible, essaie-en une autre.");
+    }
+  });
+  $("v-f-logo-retirer").addEventListener("click", () => {
+    logo = { site: "", image: null };
+    $("v-f-site").value = "";
+    siteSaisiAuMain = true;
+    majLogo();
+    messageLogo("");
+  });
   $("v-f-mode-code").addEventListener("click", () => choisirMode("code"));
   $("v-f-mode-photo").addEventListener("click", () => choisirMode("photo"));
   $("v-f-valeur").addEventListener("input", () => {

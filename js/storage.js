@@ -51,6 +51,8 @@ export function enregistrerCarte(carte) {
       validite: "",
       solde: "",
       photoVerso: null,
+      logo: null,
+      logoSite: "",
       ouvertLe: 0,
       ...carte,
       id: `c_${maintenant.toString(36)}${Math.random().toString(36).slice(2, 5)}`,
