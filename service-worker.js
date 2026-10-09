@@ -2,10 +2,11 @@
 // jour publiée est prise tout de suite), la copie ne sert que sans réseau.
 // Les cartes sont dans le localStorage : rien d'autre à mettre en cache.
 
-const CACHE_NOM = "vallet-v5";
-// Le scanner de secours (zxing-library, 330 Ko) n'est pas préchargé : il est
-// mis en cache à sa première utilisation par le gestionnaire fetch ci-dessous.
-const FICHIERS_COQUILLE = ["./", "./index.html", "./style.css", "./manifest.json", "./js/main.js", "./js/grille.js", "./js/plein-ecran.js", "./js/formulaire.js", "./js/reglages.js", "./js/storage.js", "./js/config.js", "./js/mentions.js", "./js/restauration.js", "./js/codes.js", "./js/scanner.js", "./js/photo.js", "./js/chargeur.js", "./js/validite.js", "./js/theme.js", "./js/verrou.js", "./js/partage.js", "./js/logos.js", "./js/vendor/qrcode-generator.js", "./js/vendor/JsBarcode.all.min.js", "./icons/icon-192.png", "./icons/icon-512.png"];
+const CACHE_NOM = "vallet-v6";
+// Le scanner de secours (zxing-library, 330 Ko) et le moteur OCR
+// (js/vendor/ocr, ~9 Mo) ne sont pas préchargés : mis en cache à leur
+// première utilisation par le gestionnaire fetch ci-dessous.
+const FICHIERS_COQUILLE = ["./", "./index.html", "./style.css", "./manifest.json", "./js/main.js", "./js/grille.js", "./js/plein-ecran.js", "./js/formulaire.js", "./js/reglages.js", "./js/storage.js", "./js/config.js", "./js/mentions.js", "./js/restauration.js", "./js/codes.js", "./js/scanner.js", "./js/photo.js", "./js/chargeur.js", "./js/validite.js", "./js/theme.js", "./js/verrou.js", "./js/partage.js", "./js/logos.js", "./js/ocr.js", "./js/vendor/qrcode-generator.js", "./js/vendor/JsBarcode.all.min.js", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

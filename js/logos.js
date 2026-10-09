@@ -30,6 +30,24 @@ function sansAccents(t) {
   return t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
+// Casse plus lisible que la clé technique pour quelques enseignes
+// particulières ; les autres sont juste mises en majuscule initiale.
+const NOMS_AFFICHES = { "e.leclerc": "E.Leclerc", "h&m": "H&M", mcdonald: "McDonald's", sncf: "SNCF", ugc: "UGC", bp: "BP" };
+
+// Devine l'enseigne à partir d'un texte brut lu par OCR sur la photo d'une
+// carte (voir js/ocr.js) -- réutilise la même liste que suggererSite() plus
+// bas. Renvoie "" si rien de reconnu (l'utilisateur tape alors le nom
+// lui-même, comme avant).
+export function deviner_enseigne(texteOCR) {
+  const t = sansAccents(texteOCR);
+  for (const cle of Object.keys(SITES_ENSEIGNES)) {
+    if (cle.includes(" ") ? t.includes(cle) : new RegExp(`(^|[^a-z0-9])${cle.replace(/[.]/g, "\\.")}([^a-z0-9]|$)`).test(t)) {
+      return NOMS_AFFICHES[cle] ?? cle.charAt(0).toUpperCase() + cle.slice(1);
+    }
+  }
+  return "";
+}
+
 // Site probable d'après le nom saisi (ex. « Carrefour City » -> carrefour.fr), ou "".
 export function suggererSite(nom) {
   const mots = sansAccents(nom).split(/\s+/);

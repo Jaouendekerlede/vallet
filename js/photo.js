@@ -25,7 +25,10 @@ export async function ouvrirImage(fichier) {
   }
 }
 
-export async function reduirePhoto(fichier) {
+// Partagé avec reduirePhoto ci-dessous : le canvas sert aussi à l'OCR
+// (reconnaissance automatique de l'enseigne, voir formulaire.js) sans
+// redécoder l'image une deuxième fois.
+export async function canvasPhoto(fichier) {
   const image = await ouvrirImage(fichier);
   const echelle = Math.min(1, PHOTO_LARGEUR_MAX / Math.max(image.width, image.height));
   const canvas = document.createElement("canvas");
@@ -33,5 +36,10 @@ export async function reduirePhoto(fichier) {
   canvas.height = Math.round(image.height * echelle);
   canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
   image.close?.();
+  return canvas;
+}
+
+export async function reduirePhoto(fichier) {
+  const canvas = await canvasPhoto(fichier);
   return canvas.toDataURL("image/jpeg", PHOTO_QUALITE);
 }

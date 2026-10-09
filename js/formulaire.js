@@ -1,10 +1,11 @@
 // Formulaire d'ajout / modification d'une carte.
 
-import { CATEGORIES, COULEURS, FORMATS } from "./config.js";
+import { CATEGORIES, COULEURS, FORMATS, PHOTO_QUALITE } from "./config.js";
 import { dessiner, deviner } from "./codes.js";
-import { reduirePhoto } from "./photo.js";
+import { canvasPhoto } from "./photo.js";
 import { disponible as scanDisponible, lireImage, scanner } from "./scanner.js";
-import { faviconExiste, logoDepuisFichier, nettoyerDomaine, sourceLogo, suggererSite } from "./logos.js";
+import { deviner_enseigne, faviconExiste, logoDepuisFichier, nettoyerDomaine, sourceLogo, suggererSite } from "./logos.js";
+import { reconnaitreTexte } from "./ocr.js";
 import { dupliquerCarte, enregistrerCarte, supprimerCarte, trouverCarte } from "./storage.js";
 
 const $ = (id) => document.getElementById(id);
@@ -314,12 +315,28 @@ export function initialiserFormulaire(apresChangement) {
   }
   async function fichierChoisi(e) {
     const fichier = e.target.files[0];
+    const slot = slotCourant;
     e.target.value = "";
     if (!fichier) return;
     try {
-      photos[slotCourant] = await reduirePhoto(fichier);
-      majSlot(slotCourant);
+      const canvas = await canvasPhoto(fichier);
+      photos[slot] = canvas.toDataURL("image/jpeg", PHOTO_QUALITE);
+      majSlot(slot);
       montrerErreur("");
+      // Reconnaissance automatique de l'enseigne (OCR) : seulement pour une
+      // nouvelle carte, sur le recto, et si rien n'est déjà saisi -- jamais
+      // n'écrase une modification existante ni ce que l'utilisateur tape
+      // pendant que l'OCR (quelques secondes) tourne en arrière-plan.
+      if (!modif && slot === "recto" && !$("v-f-nom").value.trim()) {
+        messageLogo("Reconnaissance de l'enseigne…");
+        const texte = await reconnaitreTexte(canvas);
+        const enseigne = deviner_enseigne(texte);
+        if (enseigne && !$("v-f-nom").value.trim()) {
+          $("v-f-nom").value = enseigne;
+          $("v-f-nom").dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        messageLogo("");
+      }
     } catch {
       montrerErreur("Image illisible, essaie une autre photo.");
     }
